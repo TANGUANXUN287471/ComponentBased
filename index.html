@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grammar Checker App</title>
+</head>
+<body>
+
+<!-- Grammar Checker Web Component -->
+<template id="grammar-checker-template">
+    <style>
+        /* Add any necessary styles for your component */
+        #grammar-checker-container {
+            max-width: 400px;
+            margin: auto;
+        }
+
+        #result-container {
+            margin-top: 10px;
+            color: #333;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+    <div id="grammar-checker-container">
+        <h2>Grammar Checker</h2>
+        <textarea id="input-text" placeholder="Enter text..."></textarea>
+        <button id="check-grammar-btn">Check Grammar</button>
+        <div id="result-container"></div>
+    </div>
+</template>
+
+<script>
+    class GrammarChecker extends HTMLElement {
+        constructor() {
+            super();
+            this.attachShadow({ mode: 'open' });
+            this.shadowRoot.appendChild(document.getElementById('grammar-checker-template').content.cloneNode(true));
+        }
+
+        connectedCallback() {
+            this.shadowRoot.getElementById('check-grammar-btn').addEventListener('click', () => this.checkGrammar());
+        }
+
+        async checkGrammar() {
+            const inputText = this.shadowRoot.getElementById('input-text').value;
+            const resultContainer = this.shadowRoot.getElementById('result-container');
+
+            try {
+                // Send a POST request to the backend
+                const response = await fetch('http://localhost:3000/check-grammar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: inputText }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Display the result
+                if (data.errors.length === 0) {
+                    resultContainer.innerHTML = '<p>No grammar errors found!</p>';
+                } else {
+                    resultContainer.innerHTML = `<p>${data.errors.length} grammar error(s) found:</p>`;
+                    data.errors.forEach(error => {
+                        resultContainer.innerHTML += `<p class="error">${error}</p>`;
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultContainer.innerHTML = '<p>An error occurred during grammar checking.</p>';
+            }
+        }
+    }
+
+    customElements.define('grammar-checker', GrammarChecker);
+</script>
+
+<!-- Include the Grammar Checker component -->
+<grammar-checker></grammar-checker>
+
+</body>
+</html>

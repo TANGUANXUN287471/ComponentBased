@@ -13,6 +13,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // Endpoint for grammar checking using GrammarBot API
+// Endpoint for grammar checking using GrammarBot API
 app.post('/check-grammar', async (req, res) => {
     try {
         const { text } = req.body;
@@ -33,7 +34,9 @@ app.post('/check-grammar', async (req, res) => {
         };
 
         const response = await axios.request(options);
-        const grammarCheckResults = response.data.matches.map(match => match.message);
+
+        // Ensure that response.data.matches is defined before trying to access it
+        const grammarCheckResults = response.data.matches ? response.data.matches.map(match => match.message) : [];
 
         // Send the result back to the client
         res.json({ errors: grammarCheckResults });
@@ -42,6 +45,7 @@ app.post('/check-grammar', async (req, res) => {
         res.status(500).json({ error: 'An internal server error occurred.' });
     }
 });
+
 
 // Serve the HTML page
 app.get('/', (req, res) => {
